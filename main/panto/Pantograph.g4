@@ -2,7 +2,7 @@
 grammar Pantograph;
 
 /* parser */
-panto               : PROPOGATE (propogation)+ DESIGN (line)+ EOF ;
+panto               : PROPOGATE (propogation)+ NEWLINE DESIGN NEWLINE (line)+ EOF ;
 line                : command NEWLINE;
 propogation         : VERTICAL ;
 command             : (draw | turn) ;
@@ -44,5 +44,5 @@ VERTICAL            : V E R T I C A L ;
 
 NUMBER              : [0-9]+ ;
 
-WHITESPACE          : (' ' | '\t') ;
+WHITESPACE          : (' ' | '\t')+ -> skip;
 NEWLINE             : ('\r'? '\n' | '\r')+ ;

@@ -1,0 +1,8 @@
+propogate VERTICAL 
+design
+turn left 90
+draw 80
+turn right 90
+draw 160
+turn left 90
+draw 80
