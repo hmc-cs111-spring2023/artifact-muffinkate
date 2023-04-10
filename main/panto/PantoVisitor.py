@@ -7,7 +7,7 @@ else:
     from PantographParser import PantographParser
 
 
-def PantoVisitor(ParseTreeVisitor):
+class PantoVisitor(ParseTreeVisitor):
     def __init__(self):
         self.screen_width = 500
         self.screen_height = 500

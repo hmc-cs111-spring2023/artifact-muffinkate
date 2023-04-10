@@ -9,12 +9,10 @@ def main(argv):
     lexer = PantographLexer(input)
     stream = CommonTokenStream(lexer)
     parser = PantographParser(stream)
-    visitor = ParseTreeVisitor()
     tree = parser.panto()
-    
-    panto = PantoVisitor(visitor)
-    walker = ParseTreeWalker()
-    walker.walk(panto, tree)     
+    panto = PantoVisitor()
+
+    panto.visitPanto(tree)    
 
 if __name__ == '__main__':
     main(sys.argv)
