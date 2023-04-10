@@ -10,6 +10,7 @@ def main(argv):
     stream = CommonTokenStream(lexer)
     parser = PantographParser(stream)
     tree = parser.panto()
+    # print(tree.toStringTree())
     panto = PantoVisitor()
 
     panto.visitPanto(tree)    

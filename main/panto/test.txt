@@ -1,8 +1,8 @@
 propogate VERTICAL 
 design
-turn left 90
-draw 80
-turn right 90
+turn left 45
 draw 160
+turn right 90
+draw 318
 turn left 90
-draw 80
+draw 160
