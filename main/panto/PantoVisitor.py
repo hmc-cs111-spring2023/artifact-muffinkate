@@ -53,11 +53,11 @@ class PantoVisitor(ParseTreeVisitor):
         c = ctx.getText().upper()
         
         if c.find("DRAW") != -1:
-            n = self.visit(ctx.getChild(0).argument())
+            n = self.visitArgument(ctx.getChild(0).argument())
             t.forward(int(n))
         
         if c.find("TURN") != -1:
-            n = self.visit(ctx.getChild(0).argument())
+            n = self.visitArgument(ctx.getChild(0).argument())
 
             if c.find("LEFT") != -1:
                 t.left(int(n))
@@ -66,3 +66,4 @@ class PantoVisitor(ParseTreeVisitor):
 
     def visitArgument(self, ctx):
         return ctx.NUMBER().getText()
+

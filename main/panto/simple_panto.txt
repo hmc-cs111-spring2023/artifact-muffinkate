@@ -1,0 +1,9 @@
+propogate:
+spacing
+design:
+turn left 45
+draw 160
+turn right 90
+draw 318
+turn left 90
+draw 160

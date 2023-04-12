@@ -2,9 +2,9 @@
 grammar Pantograph;
 
 /* parser */
-panto               : PROPOGATE (propogation)+ NEWLINE DESIGN NEWLINE (line)+ EOF ;
+panto               : PROPOGATE NEWLINE (propogation)+ NEWLINE DESIGN NEWLINE (line)+ EOF ;
 line                : command NEWLINE;
-propogation         : VERTICAL ;
+propogation         : SPACING ;
 command             : (draw | turn) ;
 draw                : DRAW argument ;
 turn                : TURN (LEFT | RIGHT) argument ;
@@ -34,13 +34,13 @@ fragment O          : ('O'|'o') ;
 fragment U          : ('U'|'u') ;
 fragment T          : ('T'|'t') ;
 
-PROPOGATE           : P R O P O G A T E ;
+PROPOGATE           : P R O P O G A T E ':';
 DRAW                : D R A W ;
 TURN                : T U R N ;
 LEFT                : L E F T ;
 RIGHT               : R I G H T ;
-DESIGN              : D E S I G N ;
-VERTICAL            : V E R T I C A L ;
+DESIGN              : D E S I G N ':';
+SPACING             : S P A C I N G ;
 
 NUMBER              : [0-9]+ ;
 
