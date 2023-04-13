@@ -1,9 +1,10 @@
 propogate:
-spacing
+scale 0.5
+
 design:
 turn left 45
-draw 160
+draw 2
 turn right 90
-draw 318
+draw 4
 turn left 90
-draw 160
+draw 2

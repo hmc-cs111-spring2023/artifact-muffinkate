@@ -2,9 +2,15 @@
 grammar Pantograph;
 
 /* parser */
-panto               : PROPOGATE NEWLINE (propogation)+ NEWLINE DESIGN NEWLINE (line)+ EOF ;
-line                : command NEWLINE;
-propogation         : SPACING ;
+panto               : PROPOGATE NEWLINE (propagation)+ DESIGN NEWLINE (line)+ EOF ;
+line                : command NEWLINE ;
+propagation         : option NEWLINE ;
+option              : (offset | curve | flip | scale | spacing) ;
+offset              : OFFSET argument ;
+curve               : CURVE argument ;
+flip                : FLIP ;
+scale               : SCALE argument ;
+spacing             : SPACING argument ;
 command             : (draw | turn) ;
 draw                : DRAW argument ;
 turn                : TURN (LEFT | RIGHT) argument ;
@@ -41,6 +47,10 @@ LEFT                : L E F T ;
 RIGHT               : R I G H T ;
 DESIGN              : D E S I G N ':';
 SPACING             : S P A C I N G ;
+OFFSET              : O F F S E T ;
+CURVE               : C U R V E ;
+FLIP                : F L I P ;
+SCALE               : S C A L E ;
 
 NUMBER              : [0-9]+ ;
 

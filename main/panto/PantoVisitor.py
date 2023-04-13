@@ -9,8 +9,9 @@ else:
 
 class PantoVisitor(ParseTreeVisitor):
     def __init__(self):
-        self.screen_width = 500
-        self.screen_height = 500
+        self.screen_width = 600
+        self.screen_height = 600
+        self.conversion_factor = 12
         self.s = turtle.Screen()
         self.t = turtle.Turtle()
         self.r = turtle.Turtle()
@@ -24,9 +25,9 @@ class PantoVisitor(ParseTreeVisitor):
         self.t.setposition(0,0)
         self.t.pendown()
 
-        prop_rules = ctx.propogation()
+        prop_rules = ctx.propagation()
         for r in prop_rules:
-            self.visit(r)
+            self.visitOption(r.option(), self.t)
 
         design = ctx.line()
         for l in design:
@@ -35,7 +36,12 @@ class PantoVisitor(ParseTreeVisitor):
         self.r.penup
         self.r.pencolor("red")
 
-        for y in range(-(self.screen_height//2)-50, self.screen_height, self.spacing):
+
+        start_y = -(self.spacing)
+        while start_y > -(self.screen_height//2):
+            start_y = start_y - self.spacing
+
+        for y in range(start_y, self.screen_height, self.spacing):
             self.r.penup()
             self.r.goto(0, y)
             if y != 0:
@@ -46,6 +52,19 @@ class PantoVisitor(ParseTreeVisitor):
 
         self.s.exitonclick()
     
+    def visitOption(self, ctx, t):
+        o = ctx.getText().upper()
+
+        if o.find("SPACING") != -1:
+            s = self.visitArgument(ctx.getChild(0).argument())
+            self.spacing = int(s)
+        
+        if o.find("SCALE") != -1:
+            s = self.visitArgument(ctx.getChild(0).argument())
+            print(s)
+            self.conversion_factor = self.conversion_factor * int(s)
+            print(self.conversion_factor)
+    
     def visitLine(self, ctx, t):
         self.visitCommand(ctx.command(), t)
 
@@ -54,7 +73,7 @@ class PantoVisitor(ParseTreeVisitor):
         
         if c.find("DRAW") != -1:
             n = self.visitArgument(ctx.getChild(0).argument())
-            t.forward(int(n))
+            t.forward(int(n) * (self.screen_height // self.conversion_factor))
         
         if c.find("TURN") != -1:
             n = self.visitArgument(ctx.getChild(0).argument())
