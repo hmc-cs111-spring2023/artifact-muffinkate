@@ -16,7 +16,9 @@ class PantoVisitor(ParseTreeVisitor):
         self.t = turtle.Turtle()
         self.r = turtle.Turtle()
         self.spacing = 100
-    
+        self.curve = False
+        self.radius = 100
+        self.visited_first_node = False    
 
     def visitPanto(self , ctx): 
         self.s.screensize(self.screen_width, self.screen_height)
@@ -42,6 +44,7 @@ class PantoVisitor(ParseTreeVisitor):
             start_y = start_y - self.spacing
 
         for y in range(start_y, self.screen_height, self.spacing):
+            self.visited_first_node = False
             self.r.penup()
             self.r.goto(0, y)
             if y != 0:
@@ -54,19 +57,26 @@ class PantoVisitor(ParseTreeVisitor):
     
     def visitOption(self, ctx, t):
         o = ctx.getText().upper()
-
-        if o.find("SPACING") != -1:
-            s = self.visitArgument(ctx.getChild(0).argument())
-            self.spacing = int(s)
         
         if o.find("SCALE") != -1:
             s = self.visitArgument(ctx.getChild(0).argument())
-            print(s)
             self.conversion_factor = self.conversion_factor * int(s)
-            print(self.conversion_factor)
+
+        if o.find("SPACING") != -1:
+            s = self.visitArgument(ctx.getChild(0).argument())
+            self.spacing = int(s) * (self.screen_height // self.conversion_factor)
+        
+        if o.find("CURVE") != -1:
+            self.curve = True
+            r = self.visitArgument(ctx.getChild(0).argument())
+            self.radius = self.conversion_factor * int(r)
+
     
     def visitLine(self, ctx, t):
-        self.visitCommand(ctx.command(), t)
+        if self.curve != True:
+            self.visitCommand(ctx.command(), t)
+        else:
+            self.visitCurveCommand(ctx.command(), t)
 
     def visitCommand(self, ctx, t):
         c = ctx.getText().upper()
@@ -82,6 +92,31 @@ class PantoVisitor(ParseTreeVisitor):
                 t.left(int(n))
             else:
                 t.right(int(n))
+
+    def visitCurveCommand(self, ctx, t):
+        c = ctx.getText().upper()
+        
+        if c.find("DRAW") != -1:
+            n = self.visitArgument(ctx.getChild(0).argument())
+            side = int(n) * (self.screen_height // self.conversion_factor)
+            t.forward(side - (self.radius * 2))
+        
+        if c.find("TURN") != -1:
+            n = self.visitArgument(ctx.getChild(0).argument())
+
+            if self.visited_first_node == False:
+                if c.find("LEFT") != -1:
+                    t.left(int(n))
+                else:
+                    t.right(int(n))
+                self.visited_first_node = True
+            elif c.find("LEFT") != -1:
+                t.circle(self.radius, int(n))
+            else:
+                t.right(180)
+                t.circle(self.radius, -int(n))
+                t.right(180)
+
 
     def visitArgument(self, ctx):
         return ctx.NUMBER().getText()

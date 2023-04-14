@@ -1,5 +1,5 @@
 propogate:
-scale 0.5
+spacing 3
 
 design:
 turn left 45
