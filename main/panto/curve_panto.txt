@@ -1,4 +1,4 @@
-propogate:
+propagate:
 curve 100
 spacing 8
 

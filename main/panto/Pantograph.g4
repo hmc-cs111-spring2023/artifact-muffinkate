@@ -2,7 +2,7 @@
 grammar Pantograph;
 
 /* parser */
-panto               : PROPOGATE NEWLINE (propagation)+ DESIGN NEWLINE (line)+ EOF ;
+panto               : PROPAGATE NEWLINE (propagation)+ DESIGN NEWLINE (line)+ EOF ;
 line                : command NEWLINE ;
 propagation         : option NEWLINE ;
 option              : (offset | curve | flip | scale | spacing) ;
@@ -40,7 +40,7 @@ fragment O          : ('O'|'o') ;
 fragment U          : ('U'|'u') ;
 fragment T          : ('T'|'t') ;
 
-PROPOGATE           : P R O P O G A T E ':';
+PROPAGATE           : P R O P A G A T E ':';
 DRAW                : D R A W ;
 TURN                : T U R N ;
 LEFT                : L E F T ;

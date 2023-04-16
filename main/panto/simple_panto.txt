@@ -1,4 +1,4 @@
-propogate:
+propagate:
 spacing 3
 
 design:
