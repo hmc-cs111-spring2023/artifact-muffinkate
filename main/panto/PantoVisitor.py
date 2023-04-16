@@ -17,7 +17,9 @@ class PantoVisitor(ParseTreeVisitor):
         self.r = turtle.Turtle()
         self.spacing = 100
         self.curve = False
-        self.radius = 100
+        self.curve_percent = 0
+        self.old_side = 0
+        self.arc = 90
         self.visited_first_node = False    
 
     def visitPanto(self , ctx): 
@@ -68,8 +70,11 @@ class PantoVisitor(ParseTreeVisitor):
         
         if o.find("CURVE") != -1:
             self.curve = True
-            r = self.visitArgument(ctx.getChild(0).argument())
-            self.radius = self.conversion_factor * int(r)
+            p = int(self.visitArgument(ctx.getChild(0).argument()))
+            if p != 0:
+                self.curve_percent = int(p)
+            else:
+                self.curve = False
 
     
     def visitLine(self, ctx, t):
@@ -99,10 +104,12 @@ class PantoVisitor(ParseTreeVisitor):
         if c.find("DRAW") != -1:
             n = self.visitArgument(ctx.getChild(0).argument())
             side = int(n) * (self.screen_height // self.conversion_factor)
-            t.forward(side - (self.radius * 2))
+            t.forward(((100 - self.curve_percent) * side) // 100)
+            self.old_side = side
         
         if c.find("TURN") != -1:
             n = self.visitArgument(ctx.getChild(0).argument())
+            radius = (self.curve_percent * self.old_side) // 100
 
             if self.visited_first_node == False:
                 if c.find("LEFT") != -1:
@@ -111,10 +118,10 @@ class PantoVisitor(ParseTreeVisitor):
                     t.right(int(n))
                 self.visited_first_node = True
             elif c.find("LEFT") != -1:
-                t.circle(self.radius, int(n))
+                t.circle(radius, int(n))
             else:
                 t.right(180)
-                t.circle(self.radius, -int(n))
+                t.circle(radius, -int(n))
                 t.right(180)
 
 

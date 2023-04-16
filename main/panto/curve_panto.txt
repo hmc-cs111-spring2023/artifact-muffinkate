@@ -1,5 +1,6 @@
 propogate:
-curve 2
+curve 100
+spacing 8
 
 design:
 draw 5
@@ -18,7 +19,7 @@ draw 2
 turn right 90
 draw 2
 turn right 90
-draw 5
+draw 3
 turn left 90
 draw 1
 turn left 90
