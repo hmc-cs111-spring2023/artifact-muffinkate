@@ -83,17 +83,17 @@ class PantoVisitor(ParseTreeVisitor):
             print("WARNING: Entrance and exit points are not the same")
 
         # sets up the propagation turtle
-        self.r.penup
+        self.r.penup()
         self.r.pencolor("red")
 
         # horizontal propagation
         self.r.setpos(self.t.pos())
-        self.r.seth(0)
-        self.r.pendown()
         while self.r.xcor() <= self.screen_width:
+            self.r.seth(0)
+            self.r.pendown()
             for l in design:
                 self.visitLine(l, self.r)
-
+        self.r.penup()
 
         # calculate the starting y postition based on the spacing
         start_y = -(self.spacing)
@@ -106,9 +106,9 @@ class PantoVisitor(ParseTreeVisitor):
             self.r.penup()
             self.r.goto(0, y)
             if y != 0:
-                self.r.seth(0)
-                self.r.pendown()
                 while self.r.xcor() <= self.screen_width:
+                    self.r.seth(0)
+                    self.r.pendown()
                     for l in design:
                         self.visitLine(l, self.r)
 
