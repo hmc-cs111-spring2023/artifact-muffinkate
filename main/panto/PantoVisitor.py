@@ -71,7 +71,45 @@ class PantoVisitor(ParseTreeVisitor):
         # visit the propagation rules from the parse tree
         prop_rules = ctx.propagation()
         for r in prop_rules:
-            self.visitOption(r.option(), self.t)
+            self.visitOption(r.option())
+
+        if self.curve == True:
+            self.curvedCorners(ctx)
+        else:
+            self.sharpCorners(ctx)
+
+        self.s.exitonclick()
+
+    def curvedCorners(self, ctx, t):
+        """ Creates a line that is bounded by the same points as sharpCorners,
+        but curves the corners. First traverses the parse tree to return all
+        the points, then uses that to draw the appropriate lines."""
+
+        # visit the parse tree and return the boundary points
+        # "boundary points" are the points from the unmodified design that
+        # the turtle turns at, and are the targets for the curved lines
+        points = []
+        design = ctx.line()
+        self.t.penup()
+        self.t.ht()
+        self.t.speed(0)
+
+        for l in design:
+            points.append(self.getPoint(l, self.t))
+
+        # reset turtle's speed and position
+        self.t.showturtle()
+        self.t.speed('normal')
+        self.t.setpos(0,0)
+
+        print(points)
+
+    def getPoint(self, ctx, t):
+        return self.visitCurveCommand(ctx, self.t)
+
+    def sharpCorners(self, ctx):
+        """ Visits each node directly as written, with all straight lines
+        and sharp corners"""
 
         # visit the design rules from the parse tree
         design = ctx.line()
@@ -100,7 +138,7 @@ class PantoVisitor(ParseTreeVisitor):
         while start_y > -(self.screen_height//2):
             start_y = start_y - self.spacing
 
-        # vertically propagation
+        # vertically propagate
         for y in range(start_y, self.screen_height, self.spacing):
             self.visited_first_node = False
             self.r.penup()
@@ -112,16 +150,28 @@ class PantoVisitor(ParseTreeVisitor):
                     for l in design:
                         self.visitLine(l, self.r)
 
-        self.s.exitonclick()
-    
-    def visitOption(self, ctx, t):
+
+    def visitOption(self, ctx):
         """ Each option node is a propagation setting. This gets
         all the arguments and assigns them to the appropriate settings"""
         o = ctx.getText().upper()
         
         if o.find("SCALE") != -1:
-            s = self.visitArgument(ctx.getChild(0).argument())
-            self.conversion_factor = self.conversion_factor * int(s)
+            if ctx.getChild(0).getChild(2) == None:
+                s = self.visitArgument(ctx.getChild(0).getChild(1))
+                self.conversion_factor = self.conversion_factor * int(s)
+            else:
+                w = int(self.visitArgument(ctx.getChild(0).getChild(1)))
+                h = int(self.visitArgument(ctx.getChild(0).getChild(2)))
+                self.conversion_factor = self.conversion_factor * w
+                if w < h: 
+                    self.screen_width = self.screen_width // (w/h)
+                    self.s.screensize(self.screen_width, self.screen_height)
+                else:
+                    self.screen_height = self.screen_height // (h/w)
+                    self.s.screensize(self.screen_width, self.screen_height)
+
+            
 
         if o.find("SPACING") != -1:
             s = self.visitArgument(ctx.getChild(0).argument())
@@ -164,30 +214,39 @@ class PantoVisitor(ParseTreeVisitor):
     def visitCurveCommand(self, ctx, t):
         """ Moves or turns the turtle depending on the argument """
         c = ctx.getText().upper()
-        
+        old_pos = t.position()
+        new_pos = (0,0)
         if c.find("DRAW") != -1:
             n = self.visitArgument(ctx.getChild(0).argument())
-            side = int(n) * (self.screen_height // self.conversion_factor)
-            t.forward(((100 - self.curve_percent) * side) // 100)
-            self.old_side = side
+            t.forward(* (self.screen_height // self.conversion_factor))
+            new_pos = t.position()
+            
+        #    side = int(n) * (self.screen_height // self.conversion_factor)
+        #    t.forward(((100 - self.curve_percent) * side) // 100)
+        #    self.old_side = side
         
         if c.find("TURN") != -1:
             n = self.visitArgument(ctx.getChild(0).argument())
-            radius = (self.curve_percent * self.old_side) // 100
-
-            if self.visited_first_node == False:
-                if c.find("LEFT") != -1:
-                    t.left(int(n))
-                else:
-                    t.right(int(n))
-                self.visited_first_node = True
-            elif c.find("LEFT") != -1:
-                t.circle(radius, int(n))
+            if c.find("LEFT") != -1:
+                t.left(int(n))
             else:
-                t.right(180)
-                t.circle(radius, -int(n))
-                t.right(180)
+                t.right(int(n))
+            new_pos = t.position()
+            #radius = (self.curve_percent * self.old_side) // 100
 
+            #if self.visited_first_node == False:
+            #    if c.find("LEFT") != -1:
+            #        t.left(int(n))
+            #    else:
+            #        t.right(int(n))
+            #    self.visited_first_node = True
+            #elif c.find("LEFT") != -1:
+            #    t.circle(radius, int(n))
+            #else:
+            #    t.right(180)
+            #    t.circle(radius, -int(n))
+            #    t.right(180)
+        return (old_pos, new_pos)
 
     def visitArgument(self, ctx):
         """ Returns an argument as a string """

@@ -2,14 +2,14 @@
 grammar Pantograph;
 
 /* parser */
-panto               : PROPAGATE NEWLINE (propagation)+ DESIGN NEWLINE (line)+ EOF ;
+panto               : PROPAGATE NEWLINE (propagation)* DESIGN NEWLINE (line)+ EOF ;
 line                : command NEWLINE ;
 propagation         : option NEWLINE ;
 option              : (offset | curve | flip | scale | spacing) ;
 offset              : OFFSET argument ;
 curve               : CURVE argument ;
 flip                : FLIP ;
-scale               : SCALE argument ;
+scale               : SCALE (argument)+ ;
 spacing             : SPACING argument ;
 command             : (draw | turn) ;
 draw                : DRAW argument ;
