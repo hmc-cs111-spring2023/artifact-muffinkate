@@ -80,7 +80,7 @@ class PantoVisitor(ParseTreeVisitor):
 
         self.s.exitonclick()
 
-    def curvedCorners(self, ctx, t):
+    def curvedCorners(self, ctx):
         """ Creates a line that is bounded by the same points as sharpCorners,
         but curves the corners. First traverses the parse tree to return all
         the points, then uses that to draw the appropriate lines."""
@@ -105,7 +105,7 @@ class PantoVisitor(ParseTreeVisitor):
         print(points)
 
     def getPoint(self, ctx, t):
-        return self.visitCurveCommand(ctx, self.t)
+        return self.visitCurveCommand(ctx.command(), t)
 
     def sharpCorners(self, ctx):
         """ Visits each node directly as written, with all straight lines
@@ -157,19 +157,21 @@ class PantoVisitor(ParseTreeVisitor):
         o = ctx.getText().upper()
         
         if o.find("SCALE") != -1:
-            if ctx.getChild(0).getChild(2) == None:
-                s = self.visitArgument(ctx.getChild(0).getChild(1))
-                self.conversion_factor = self.conversion_factor * int(s)
-            else:
-                w = int(self.visitArgument(ctx.getChild(0).getChild(1)))
-                h = int(self.visitArgument(ctx.getChild(0).getChild(2)))
-                self.conversion_factor = self.conversion_factor * w
-                if w < h: 
-                    self.screen_width = self.screen_width // (w/h)
-                    self.s.screensize(self.screen_width, self.screen_height)
-                else:
-                    self.screen_height = self.screen_height // (h/w)
-                    self.s.screensize(self.screen_width, self.screen_height)
+            s = self.visitArgument(ctx.getChild(0).argument())
+            self.conversion_factor = self.conversion_factor * int(s)
+            #if ctx.getChild(0).getChild(2) == None:
+            #    s = self.visitArgument(ctx.getChild(0).getChild(1))
+            #    self.conversion_factor = self.conversion_factor * int(s)
+            #else:
+            #    w = int(self.visitArgument(ctx.getChild(0).getChild(1)))
+            #    h = int(self.visitArgument(ctx.getChild(0).getChild(2)))
+            #    self.conversion_factor = self.conversion_factor * w
+            #    if w < h: 
+            #        self.screen_width = self.screen_width // (w/h)
+            #        self.s.screensize(self.screen_width, self.screen_height)
+            #    else:
+            #        self.screen_height = self.screen_height // (h/w)
+            #        self.s.screensize(self.screen_width, self.screen_height)
 
             
 
@@ -218,7 +220,7 @@ class PantoVisitor(ParseTreeVisitor):
         new_pos = (0,0)
         if c.find("DRAW") != -1:
             n = self.visitArgument(ctx.getChild(0).argument())
-            t.forward(* (self.screen_height // self.conversion_factor))
+            t.forward(int(n) * (self.screen_height // self.conversion_factor))
             new_pos = t.position()
             
         #    side = int(n) * (self.screen_height // self.conversion_factor)
