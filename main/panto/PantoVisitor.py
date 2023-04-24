@@ -6,6 +6,46 @@ if __name__ is not None and "." in __name__:
 else:
     from PantographParser import PantographParser
 
+def arc(wid, ht, start_x, start_y, turble):
+    """ Draws an arc by drawing a quarter of an ellipse
+        given a width and a height
+    """
+    for i in range(91):
+        t = i * (math.pi / 180)
+        x = start_x + (wid * math.sin(t))
+        y = start_y + (ht * math.cos(t) - ht)
+        turble.goto(x,y)
+
+def get_turn(x, y, heading):
+    """
+        Determines whether the turtle is turning left or right
+        based on the point it is going towards, and the current
+        direction the turtle is facing.
+
+        Quadrants are determined in relation to what point the
+        turtle currently is at
+
+        Returns a tuple of booleans in left, right order
+    """
+    # turtle is heading in the first quadrant
+    if x > 0 and y > 0:
+        if heading >= 180 and heading > 90:
+            return False, True
+        return True, False
+    # turtle is heading in the second quadrant
+    if x < 0 and y > 0:
+        if heading >= 0 and heading < 90:
+            return True, False
+        return False, True
+    # turtle is heading in the third quadrant
+    if x < 0 and y < 0:
+        if heading >= 270 and heading < 360:
+            return False, True
+        return True, False
+    # turtle is heading in the fourth quadrant
+    if heading >= 180 and heading > 90: 
+        return True, False
+    return False, True
 
 class PantoVisitor(ParseTreeVisitor):
     """
@@ -55,6 +95,7 @@ class PantoVisitor(ParseTreeVisitor):
         self.curve = False
         self.curve_percent = 0
         self.old_side = 0
+        self.midpoint = (0,0)
         self.visited_first_node = False    
 
     def visitPanto(self , ctx): 
@@ -101,8 +142,31 @@ class PantoVisitor(ParseTreeVisitor):
         self.t.showturtle()
         self.t.speed('normal')
         self.t.setpos(0,0)
+        self.t.pendown()
 
-        print(points)
+        for i in range(0, len(points)):
+            p0 = points[i][0]
+            p1 = points[i][1]
+            # if it's a turn, arc to the appropriate point in the next pair
+            if p0 == p1:
+                self.t.color("green")
+                next_point = points[i+1]
+                next_midpoint = ((next_point[1][0] + next_point[0][0])/2, (next_point[1][1] + next_point[0][1])/2)
+                new_x = next_midpoint[0]-self.midpoint[0]
+                new_y = next_midpoint[1]-self.midpoint[1]
+                left, right = get_turn(new_x, new_y, self.t.heading())
+                #if left:
+                arc(next_midpoint[0]-self.midpoint[0], -1*(next_midpoint[1]-self.midpoint[1]), self.t.xcor(), self.t.ycor(), self.t)
+                #if right:
+                #    arc(-1*(next_midpoint[0]-self.midpoint[0]), -1*(next_midpoint[1]-self.midpoint[1]), self.t.xcor(), self.t.ycor(), self.t)
+
+            # if it's a draw command, move forward the appropriate amount
+            else:
+                self.t.color("blue")
+                self.midpoint = ((p0[0] + p1[0])/2, (p0[1] + p1[1])/2)
+                self.t.goto(self.midpoint)
+                # self.t.forward(((100 - self.curve_percent) * side) // 100)
+
 
     def getPoint(self, ctx, t):
         return self.visitCurveCommand(ctx.command(), t)
@@ -253,4 +317,3 @@ class PantoVisitor(ParseTreeVisitor):
     def visitArgument(self, ctx):
         """ Returns an argument as a string """
         return ctx.NUMBER().getText()
-

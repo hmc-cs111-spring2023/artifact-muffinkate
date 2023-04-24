@@ -7,7 +7,7 @@ line                : command NEWLINE ;
 propagation         : option NEWLINE ;
 option              : (offset | curve | rotate | scale | spacing) ;
 offset              : OFFSET argument ;
-curve               : CURVE argument ;
+curve               : CURVE (argument)? ;
 rotate              : ROTATE argument ;
 scale               : SCALE argument ;
 spacing             : SPACING argument ;
