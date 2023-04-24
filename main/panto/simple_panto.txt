@@ -1,10 +1,10 @@
 propagate:
-spacing 3
-scale 3
+spacing 2
+scale 2 3
 
 design:
 turn left 45
-draw 2
+drsw 2
 turn right 90
 draw 4
 turn left 90
