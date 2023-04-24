@@ -1,6 +1,6 @@
 propagate:
 curve 50
-spacing 8
+spacing 3
 
 design:
 draw 5

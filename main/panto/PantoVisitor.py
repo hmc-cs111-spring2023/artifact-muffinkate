@@ -1,53 +1,11 @@
 from antlr4 import *
 import turtle
 import math
+from PantoUtil import *
 if __name__ is not None and "." in __name__:
     from .PantographParser import PantographParser
 else:
     from PantographParser import PantographParser
-
-def arc(wid, ht, start_x, start_y, turble):
-    """ Draws an arc by drawing a quarter of an ellipse
-        given a width and a height
-    """
-    for i in range(91):
-        t = i * (math.pi / 180)
-        x = start_x + (wid * math.sin(t))
-        y = start_y + (ht * math.cos(t) - ht)
-        turble.setheading(turble.towards(x, y))
-        turble.goto(x,y)
-
-def turn_toggle(x, y, heading):
-    """
-        Determines whether the turtle needs to negate the
-        y-direction or not
-
-        Quadrants are determined in relation to what point the
-        turtle currently is at
-
-        Returns a boolean
-    """
-    # turtle is heading in the first quadrant
-    if heading >= 0 and heading < 90:
-        if x < 0 and y > 0:
-            return False
-        return True
-    # turtle is heading in the second quadrant
-    elif heading >= 90 and heading < 180:
-        if x > 0 and y > 0:
-            return False
-        return True
-    # turtle is heading in the third quadrant
-    elif heading >= 180 and heading < 270:
-        if x > 0 and y < 0:
-            return False
-        return True
-    # turtle is heading in the fourth quadrant
-    elif heading >= 270 and heading < 360:
-        if x < 0 and y < 0:
-            return False
-        return True
-    return True
 
 class PantoVisitor(ParseTreeVisitor):
     """
@@ -83,6 +41,9 @@ class PantoVisitor(ParseTreeVisitor):
     visitCommand
     visitCurveCommand
     visitArgument
+    curvedCorners
+    sharpCorners
+    curveDesign
 
     """
     def __init__(self):
@@ -142,39 +103,83 @@ class PantoVisitor(ParseTreeVisitor):
 
         # reset turtle's speed and position
         self.t.showturtle()
-        self.t.speed('normal')
+        #self.t.speed('fast')
         self.t.setpos(0,0)
         self.t.pendown()
 
+        # first design
+        self.curveDesign(points, self.t)
+
+        # warning message that entrance/exit points are not the same
+        if self.t.ycor() != 0:
+            print("WARNING: Entrance and exit points are not the same")
+
+        # sets up the propagation turtle
+        self.r.penup()
+        self.r.pencolor("red")
+        self.r.speed(0)
+
+        # horizontal propagation
+        self.r.setpos(self.t.pos())
+        while self.r.xcor() <= self.screen_width:
+            points_temp = update_points(points, self.r.pos())
+            self.r.seth(0)
+            self.r.pendown()
+            self.curveDesign(points_temp, self.r)
+        self.r.penup()
+
+        # vertical propogation
+        # calculate the starting y postition based on the spacing
+        start_y = -(self.spacing)
+        while start_y > -(self.screen_height//2):
+            start_y = start_y - self.spacing
+
+        # vertically propagate
+        for y in range(start_y, self.screen_height, self.spacing):
+            self.visited_first_node = False
+            self.r.penup()
+            self.r.goto(0, y)
+            if y != 0:
+                while self.r.xcor() <= self.screen_width:
+                    points_temp = update_points(points, self.r.pos())
+                    self.r.seth(0)
+                    self.r.pendown()
+                    self.curveDesign(points_temp, self.r)
+
+
+    def curveDesign(self, points, t):
+        """
+        Draws the curved design using the list of points from
+        the straight-edge version, and the given turtle
+        """
         for i in range(0, len(points)):
             p0 = points[i][0]
             p1 = points[i][1]
             # if it's a turn, arc to the appropriate point in the next pair
             if p0 == p1:
-                self.t.color("green")
                 next_point = points[i+1]
                 next_midpoint = ((next_point[1][0] + next_point[0][0])/2, (next_point[1][1] + next_point[0][1])/2)
                 new_x = next_midpoint[0]-self.midpoint[0]
                 new_y = next_midpoint[1]-self.midpoint[1]
-                toggle = turn_toggle(new_x, new_y, self.t.heading())
+                toggle = turn_toggle(new_x, new_y, t.heading())
                 if toggle:
-                    arc(new_x, -1*new_y, self.t.xcor(), self.t.ycor(), self.t)
+                    arc(new_x, -1*new_y, t.xcor(), t.ycor(), t)
                 else:
-                    self.t.penup()
-                    self.t.goto(next_midpoint)
-                    self.t.pendown()
-                    arc(-1*new_x, new_y, self.t.xcor(), self.t.ycor(), self.t)
-                    self.t.penup()
-                    self.t.goto(next_midpoint)
-                    self.t.pendown()
-                    self.t.left(180)
+                    t.penup()
+                    t.goto(next_midpoint)
+                    t.pendown()
+                    arc(-1*new_x, new_y, t.xcor(), t.ycor(), t)
+                    t.penup()
+                    t.goto(next_midpoint)
+                    t.pendown()
+                    t.left(180)
 
             # if it's a draw command, move forward the appropriate amount
             else:
-                self.t.color("blue")
                 self.midpoint = ((p0[0] + p1[0])/2, (p0[1] + p1[1])/2)
-                self.t.goto(self.midpoint)
-                # self.t.forward(((100 - self.curve_percent) * side) // 100)
+                t.goto(self.midpoint)
+                # self.t.setheading(self.t.towards(p1[0],p1[1]))
+                #self.t.forward(((100 - self.curve_percent) * self.t.distance(p1[0],p1[1])) // 100)
 
 
     def getPoint(self, ctx, t):
@@ -231,22 +236,7 @@ class PantoVisitor(ParseTreeVisitor):
         
         if o.find("SCALE") != -1:
             s = self.visitArgument(ctx.getChild(0).argument())
-            self.conversion_factor = self.conversion_factor * int(s)
-            #if ctx.getChild(0).getChild(2) == None:
-            #    s = self.visitArgument(ctx.getChild(0).getChild(1))
-            #    self.conversion_factor = self.conversion_factor * int(s)
-            #else:
-            #    w = int(self.visitArgument(ctx.getChild(0).getChild(1)))
-            #    h = int(self.visitArgument(ctx.getChild(0).getChild(2)))
-            #    self.conversion_factor = self.conversion_factor * w
-            #    if w < h: 
-            #        self.screen_width = self.screen_width // (w/h)
-            #        self.s.screensize(self.screen_width, self.screen_height)
-            #    else:
-            #        self.screen_height = self.screen_height // (h/w)
-            #        self.s.screensize(self.screen_width, self.screen_height)
-
-            
+            self.conversion_factor = self.conversion_factor * int(s)         
 
         if o.find("SPACING") != -1:
             s = self.visitArgument(ctx.getChild(0).argument())
@@ -295,10 +285,6 @@ class PantoVisitor(ParseTreeVisitor):
             n = self.visitArgument(ctx.getChild(0).argument())
             t.forward(int(n) * (self.screen_height // self.conversion_factor))
             new_pos = t.position()
-            
-        #    side = int(n) * (self.screen_height // self.conversion_factor)
-        #    t.forward(((100 - self.curve_percent) * side) // 100)
-        #    self.old_side = side
         
         if c.find("TURN") != -1:
             n = self.visitArgument(ctx.getChild(0).argument())
@@ -307,20 +293,6 @@ class PantoVisitor(ParseTreeVisitor):
             else:
                 t.right(int(n))
             new_pos = t.position()
-            #radius = (self.curve_percent * self.old_side) // 100
-
-            #if self.visited_first_node == False:
-            #    if c.find("LEFT") != -1:
-            #        t.left(int(n))
-            #    else:
-            #        t.right(int(n))
-            #    self.visited_first_node = True
-            #elif c.find("LEFT") != -1:
-            #    t.circle(radius, int(n))
-            #else:
-            #    t.right(180)
-            #    t.circle(radius, -int(n))
-            #    t.right(180)
         return (old_pos, new_pos)
 
     def visitArgument(self, ctx):
