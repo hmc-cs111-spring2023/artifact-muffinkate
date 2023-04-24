@@ -14,38 +14,40 @@ def arc(wid, ht, start_x, start_y, turble):
         t = i * (math.pi / 180)
         x = start_x + (wid * math.sin(t))
         y = start_y + (ht * math.cos(t) - ht)
+        turble.setheading(turble.towards(x, y))
         turble.goto(x,y)
 
-def get_turn(x, y, heading):
+def turn_toggle(x, y, heading):
     """
-        Determines whether the turtle is turning left or right
-        based on the point it is going towards, and the current
-        direction the turtle is facing.
+        Determines whether the turtle needs to negate the
+        y-direction or not
 
         Quadrants are determined in relation to what point the
         turtle currently is at
 
-        Returns a tuple of booleans in left, right order
+        Returns a boolean
     """
     # turtle is heading in the first quadrant
-    if x > 0 and y > 0:
-        if heading >= 180 and heading > 90:
-            return False, True
-        return True, False
+    if heading >= 0 and heading < 90:
+        if x < 0 and y > 0:
+            return False
+        return True
     # turtle is heading in the second quadrant
-    if x < 0 and y > 0:
-        if heading >= 0 and heading < 90:
-            return True, False
-        return False, True
+    elif heading >= 90 and heading < 180:
+        if x > 0 and y > 0:
+            return False
+        return True
     # turtle is heading in the third quadrant
-    if x < 0 and y < 0:
-        if heading >= 270 and heading < 360:
-            return False, True
-        return True, False
+    elif heading >= 180 and heading < 270:
+        if x > 0 and y < 0:
+            return False
+        return True
     # turtle is heading in the fourth quadrant
-    if heading >= 180 and heading > 90: 
-        return True, False
-    return False, True
+    elif heading >= 270 and heading < 360:
+        if x < 0 and y < 0:
+            return False
+        return True
+    return True
 
 class PantoVisitor(ParseTreeVisitor):
     """
@@ -154,11 +156,18 @@ class PantoVisitor(ParseTreeVisitor):
                 next_midpoint = ((next_point[1][0] + next_point[0][0])/2, (next_point[1][1] + next_point[0][1])/2)
                 new_x = next_midpoint[0]-self.midpoint[0]
                 new_y = next_midpoint[1]-self.midpoint[1]
-                left, right = get_turn(new_x, new_y, self.t.heading())
-                #if left:
-                arc(next_midpoint[0]-self.midpoint[0], -1*(next_midpoint[1]-self.midpoint[1]), self.t.xcor(), self.t.ycor(), self.t)
-                #if right:
-                #    arc(-1*(next_midpoint[0]-self.midpoint[0]), -1*(next_midpoint[1]-self.midpoint[1]), self.t.xcor(), self.t.ycor(), self.t)
+                toggle = turn_toggle(new_x, new_y, self.t.heading())
+                if toggle:
+                    arc(new_x, -1*new_y, self.t.xcor(), self.t.ycor(), self.t)
+                else:
+                    self.t.penup()
+                    self.t.goto(next_midpoint)
+                    self.t.pendown()
+                    arc(-1*new_x, new_y, self.t.xcor(), self.t.ycor(), self.t)
+                    self.t.penup()
+                    self.t.goto(next_midpoint)
+                    self.t.pendown()
+                    self.t.left(180)
 
             # if it's a draw command, move forward the appropriate amount
             else:
