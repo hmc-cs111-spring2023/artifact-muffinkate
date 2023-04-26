@@ -1,5 +1,5 @@
 propagate:
-curve 50
+curve True
 spacing 3
 
 design:

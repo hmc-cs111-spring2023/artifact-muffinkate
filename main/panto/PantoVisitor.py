@@ -26,10 +26,8 @@ class PantoVisitor(ParseTreeVisitor):
     curve               : a boolean to say if the design is curved or not
                         to trigger which function it uses for each node.
                         Default is false.
-    curve_percent       : the percent of the each line in the design that
-                        becomes part of the curved corner. Default is 0.
-    old_side            : an attribute used only if curve is true to track
-                        the length of the most recent side that was drawn.
+    midpoint            : an attribute used only if curve is true to track
+                        the midpoint of the current side being curved from.
     visited_first_node  : boolean to track whether the first node has been
                         visited, so that if it curves and turns first in 
                         the design, it turns in place.
@@ -56,8 +54,6 @@ class PantoVisitor(ParseTreeVisitor):
         self.r = turtle.Turtle() 
         self.spacing = 100
         self.curve = False
-        self.curve_percent = 0
-        self.old_side = 0
         self.midpoint = (0,0)
         self.visited_first_node = False    
 
@@ -178,8 +174,6 @@ class PantoVisitor(ParseTreeVisitor):
             else:
                 self.midpoint = ((p0[0] + p1[0])/2, (p0[1] + p1[1])/2)
                 t.goto(self.midpoint)
-                # self.t.setheading(self.t.towards(p1[0],p1[1]))
-                #self.t.forward(((100 - self.curve_percent) * self.t.distance(p1[0],p1[1])) // 100)
 
 
     def getPoint(self, ctx, t):
@@ -244,10 +238,8 @@ class PantoVisitor(ParseTreeVisitor):
         
         if o.find("CURVE") != -1:
             self.curve = True
-            p = int(self.visitArgument(ctx.getChild(0).argument()))
-            if p != 0:
-                self.curve_percent = int(p)
-            else:
+            p = ctx.getChild(0).getText().upper()
+            if p.find("FALSE") != -1:
                 self.curve = False
 
     
@@ -255,7 +247,7 @@ class PantoVisitor(ParseTreeVisitor):
         """ Visits a command node, and calls VisitCommand
         if curve is false, and calls VisitCurveCommand if
         the design is supposed to be curved """
-        if self.curve != True or self.curve_percent == 0:
+        if self.curve != True:
             self.visitCommand(ctx.command(), t)
         else:
             self.visitCurveCommand(ctx.command(), t)
