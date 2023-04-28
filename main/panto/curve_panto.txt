@@ -1,6 +1,5 @@
 propagate:
-curve True
-spacing 3
+spacing 5
 
 design:
 draw 5
